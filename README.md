@@ -1,2 +1,2 @@
 # MIPS
-MIPS (dhbkhn)
+- Summary of MIPS topics and exercises
