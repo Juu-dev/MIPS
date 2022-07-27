@@ -455,8 +455,6 @@ CheckKey:
 	beq $t0, 'd', key_D
 	beq $t0, 's', key_S
 	beq $t0, 'a', key_A
-	beq $t0, 'z', key_Z
-	beq $t0, 'x', key_X
 	bne $s1, 0, check_border
 	j WaitForKey
 
@@ -478,27 +476,7 @@ key_S:
 	li $s1, 512
 	j convert_color_2
 	
-# giam toc
-key_X:
-	addi $s7, $s7, 2
-	beq $s1, -512, convert_color
-	beq $s1, -1, convert_color
-	beq $s1, 512, convert_color_2
-	beq $s1, 1, convert_color_2
 
-# tang toc 
-key_Z:
-	addi $s7, $s7, -2
-	bltz $s7, key_X_ex
-	j key_X_cont
-key_X_ex:
-	li $s7, 0
-key_X_cont:
-	beq $s1, -512, convert_color
-	beq $s1, -1, convert_color
-	beq $s1, 512, convert_color_2
-	beq $s1, 1, convert_color_2
-	
 # Dao chieu di chuyen
 convert_color_back:
 	mul $s1, $s1, -1	# dao chieu khi va phai bien
@@ -574,7 +552,6 @@ check_border:
 	add $sp, $t8, $zero	# con tro sp tro vao dau stack
 	lw $s0, 0($sp)		# lay vi tri pixel tu ngan xep dau tien
 	
-	jal sleep
 	beq $s1, -512, check_row_top
 	beq $s1, 512, check_row_bottom
 	beq $s1, -1, check_col_left
@@ -633,10 +610,3 @@ check_col_left:
 	beq $t4, 2, convert_color_back	# neu thuoc khoang kiem tra thi dao chieu di chuyen
 	j convert_color		# neu khong thi tiep tuc to mau
 #-----------------------------------------------------
-
-# sleep sau moi lan di chuyen
-sleep:
-	li $v0, 32
-	add $a0, $s7, $0
-	syscall
-	jr $ra
