@@ -16,7 +16,6 @@
  # Auto clear after sw
 
 
-
 .text
 
 # ----------------------------------------------------------------------------------------
@@ -372,9 +371,9 @@ convert_2:
 
 # Doi vi tri tu s5 thanh s6 va nguoc lai	
 convert_3:	
-	add $t1, $s5, $zero	# t1 = s3
-	add $s5, $s6, $zero	# s3 = s4
-	add $s6, $t1, $zero	# s4 = t1										
+	add $t1, $s5, $zero	# t1 = s5
+	add $s5, $s6, $zero	# s5 = s6
+	add $s6, $t1, $zero	# s6 = t1										
 	j color_main_back	
 	
 # Ham thoat khoi chuong trinh main
@@ -422,9 +421,11 @@ li $t6, 0
 	li $k1, KEY_READY	# =1 if has a new keycode ?
 				# Auto clear after lw
 				
-	li $a0, DISPLAY_CODE	# ASCII code to show, 1 byte
+	li $a2, DISPLAY_CODE	# ASCII code to show, 1 byte
 	li $a1, DISPLAY_READY	# =1 if the display has already to do
 				# Auto clear after sw
+				
+	li $s7, 0		# bien toc do cho 
 				
 loop: 
 	nop
@@ -446,7 +447,7 @@ WaitForDis:
 	nop
 #-----------------------------------------------------
 ShowKey: 
-	sw $t0, 0($a0) # show key
+	sw $t0, 0($a2) # show key
 	nop
 	
 CheckKey:
@@ -454,6 +455,8 @@ CheckKey:
 	beq $t0, 'd', key_D
 	beq $t0, 's', key_S
 	beq $t0, 'a', key_A
+	beq $t0, 'z', key_Z
+	beq $t0, 'x', key_X
 	bne $s1, 0, check_border
 	j WaitForKey
 
@@ -474,6 +477,27 @@ key_D:
 key_S:
 	li $s1, 512
 	j convert_color_2
+	
+# giam toc
+key_X:
+	addi $s7, $s7, 2
+	beq $s1, -512, convert_color
+	beq $s1, -1, convert_color
+	beq $s1, 512, convert_color_2
+	beq $s1, 1, convert_color_2
+
+# tang toc 
+key_Z:
+	addi $s7, $s7, -2
+	bltz $s7, key_X_ex
+	j key_X_cont
+key_X_ex:
+	li $s7, 0
+key_X_cont:
+	beq $s1, -512, convert_color
+	beq $s1, -1, convert_color
+	beq $s1, 512, convert_color_2
+	beq $s1, 1, convert_color_2
 	
 # Dao chieu di chuyen
 convert_color_back:
@@ -496,8 +520,7 @@ convert_color_ele:
 	sw $t2, 0($t4)		# k0 = DARK
 	
 	# Luu vao stack
-	mul $s2,  $s1, 4	# tang toc do chay
-	add $s0, $s0, $s2	# Xac dinh pixel can to mau
+	add $s0, $s0, $s1	# Xac dinh pixel can to mau
 	add $s6, $s0, $zero
 	sw $s6, 0($sp)		# gan lai vao ngan stack vua lay
 
@@ -525,8 +548,7 @@ convert_color_ele_2:
 	sw $t2, 0($t4)		# k0 = DARK
 	
 	# Luu vao stack
-	mul $s2,  $s1, 6	# tang toc do chay
-	add $s0, $s0, $s2	# Xac dinh pixel can to mau
+	add $s0, $s0, $s1	# Xac dinh pixel can to mau
 	add $s6, $s0, $zero
 	sw $s6, 0($sp)		# gan lai vao ngan stack vua lay
 
@@ -552,6 +574,7 @@ check_border:
 	add $sp, $t8, $zero	# con tro sp tro vao dau stack
 	lw $s0, 0($sp)		# lay vi tri pixel tu ngan xep dau tien
 	
+	jal sleep
 	beq $s1, -512, check_row_top
 	beq $s1, 512, check_row_bottom
 	beq $s1, -1, check_col_left
@@ -611,3 +634,9 @@ check_col_left:
 	j convert_color		# neu khong thi tiep tuc to mau
 #-----------------------------------------------------
 
+# sleep sau moi lan di chuyen
+sleep:
+	li $v0, 32
+	add $a0, $s7, $0
+	syscall
+	jr $ra
